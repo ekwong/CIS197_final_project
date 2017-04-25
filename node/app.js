@@ -1,27 +1,13 @@
 var express = require('express');
 var app = express();
 var uuid = require('node-uuid');
-var SpotifyWebApi = require('spotify-web-api-node');
-var credentials = require('./config');
-
+var spotify = require('./spotify');
+var authorizeURL = spotify.authorizeURL;
+var spotifyApi = spotify.spotifyApi;
 // Serve static pages
 app.engine('html', require('ejs').__express);
 app.set('view engine', 'html');
 app.use(express.static(__dirname + '/public'));
-
-
-var scopes = ['user-read-private', 'user-read-email'];
-
-console.log(credentials.client_id);
-// credentials are optional
-var spotifyApi = new SpotifyWebApi({
-  clientId: credentials.client_id,
-  clientSecret: credentials.client_secret,
-  redirectUri: credentials.callback_URL
-});
-// Create the authorization URL
-var authorizeURL = spotifyApi.createAuthorizeURL(scopes);
-
 
 app.get('/', function (req, res) {
   res.redirect(authorizeURL);
@@ -29,7 +15,6 @@ app.get('/', function (req, res) {
 });
 
 app.get('/callback', function (req, res) {
-  console.log("in callback");
   if (req.query.error) {
     console.log("error is: " + req.query.error);
   }
@@ -46,11 +31,18 @@ app.get('/callback', function (req, res) {
       // Set the access token on the API object to use it in later calls
       spotifyApi.setAccessToken(data.body['access_token']);
       spotifyApi.setRefreshToken(data.body['refresh_token']);
-      res.send("sent code");
+      res.redirect("/spotify");
     }, function(err) {
       console.log('Something went wrong!', err);
     });
 });
+
+app.get('/spotify', function (req, res) {
+  spotify.getMe(function (err, result) {
+    console.log("results: " + result);
+  });
+  res.render('loggedin');
+})
 
 // Generate a random cookie secret for this app
 var generateCookieSecret = function () {
