@@ -20,6 +20,19 @@ var getMe = function (callback) {
     console.log('Something went wrong!', err);
     callback(err);
   });
-}
+};
 
-module.exports = {getMe, spotifyApi, authorizeURL};
+var getNewReleases = function (callback) {
+    // Retrieve new releases
+    spotifyApi.getNewReleases({ limit : 5, offset: 0, country: 'SE' })
+    .then(function(data) {
+      console.log(data.body);
+      callback(null, data.body);
+    }, function(err) {
+     console.log("Something went wrong!", err);
+     callback(err);
+   });
+  };
+
+
+  module.exports = {getMe, spotifyApi, authorizeURL, getNewReleases};

@@ -4,44 +4,26 @@ var uuid = require('node-uuid');
 var spotify = require('./spotify');
 var authorizeURL = spotify.authorizeURL;
 var spotifyApi = spotify.spotifyApi;
+
+var login = require('./routes/login');
+var callback = require('./routes/callback');
 // Serve static pages
 app.engine('html', require('ejs').__express);
 app.set('view engine', 'html');
 app.use(express.static(__dirname + '/public'));
 
-app.get('/', function (req, res) {
-  res.redirect(authorizeURL);
-  console.log("AUTHORIZE URL: " + authorizeURL);
-});
+app.get('/', login);
 
-app.get('/callback', function (req, res) {
-  if (req.query.error) {
-    console.log("error is: " + req.query.error);
-  }
-  var authCode = req.query.code;
-  console.log("AUTH CODE: " + authCode);
-  
-  // Retrieve an access token and a refresh token
-  spotifyApi.authorizationCodeGrant(authCode)
-    .then(function(data) {
-      console.log('The token expires in ' + data.body['expires_in']);
-      console.log('The access token is ' + data.body['access_token']);
-      console.log('The refresh token is ' + data.body['refresh_token']);
-
-      // Set the access token on the API object to use it in later calls
-      spotifyApi.setAccessToken(data.body['access_token']);
-      spotifyApi.setRefreshToken(data.body['refresh_token']);
-      res.redirect("/spotify");
-    }, function(err) {
-      console.log('Something went wrong!', err);
-    });
-});
+app.get('/callback', callback);
 
 app.get('/spotify', function (req, res) {
   spotify.getMe(function (err, result) {
     console.log("results: " + result);
   });
-  res.render('loggedin');
+  spotify.getNewReleases(function (err, results) {
+    console.log("result of new releases: " + results);
+    res.render('loggedin', {newReleases: results});
+  })
 })
 
 // Generate a random cookie secret for this app
