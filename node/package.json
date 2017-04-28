@@ -11,10 +11,12 @@
   "license": "ISC",
   "dependencies": {
     "body-parser": "^1.14.1",
+    "bootstrap": "^3.3.7",
     "cookie-session": "^2.0.0-alpha.1",
     "ejs": "^2.3.4",
     "eslint": "^2.3.0",
     "express": "^4.13.3",
+    "jquery": "^3.2.1",
     "lodash": "^4.6.1",
     "mongoose": "^4.1.11",
     "node-uuid": "^1.4.3",

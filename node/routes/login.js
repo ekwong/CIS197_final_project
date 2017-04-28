@@ -6,7 +6,6 @@ var authorizeURL = spotify.authorizeURL;
 // Provided - do not modify
 var login = function (req, res) {
   res.redirect(authorizeURL);
-  console.log("AUTHORIZE URL: " + authorizeURL);
 }
 
 module.exports = login;

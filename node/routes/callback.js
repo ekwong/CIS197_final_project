@@ -6,7 +6,6 @@ var processCallback = function (req, res) {
     console.log("error is: " + req.query.error);
   }
   var authCode = req.query.code;
-  console.log("AUTH CODE: " + authCode);
   
   // Retrieve an access token and a refresh token
   spotifyApi.authorizationCodeGrant(authCode)
