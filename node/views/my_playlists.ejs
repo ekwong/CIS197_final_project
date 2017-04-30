@@ -2,14 +2,8 @@
 <html>
 <head>
   <meta charset="UTF-8">
-  <title>title</title>
+  <title>CIS 197 Final Project</title>
 
-  <!--   <!-- Latest compiled and minified CSS -->
-  <!-- <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u" crossorigin="anonymous"> -->
-
-  <!-- Optional theme -->
-  <!-- <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap-theme.min.css" integrity="sha384-rHyoN1iRsVXV4nD0JutlnGaslCJuC7uwjduW9SVrLvRYooPp2bWYgmgJQIXwl/Sp" crossorigin="anonymous"> -->
-  <!--   <link rel="stylesheet" href="/css/bootstrap.min.css">" -->
   <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0-alpha.6/css/bootstrap.min.css" integrity="sha384-rwoIResjU2yc3z8GV/NPeZWAv56rSmLldC3R/AZzGRnGxQQKnKkoFVhFQhNUwEyJ" crossorigin="anonymous">
 
 
@@ -24,13 +18,13 @@
 
     <div class="collapse navbar-collapse" id="navbarSupportedContent">
       <ul class="navbar-nav mr-auto">
-        <li class="nav-item active">
-          <a class="nav-link" href="#">Search <span class="sr-only">(current)</span></a>
+        <li class="nav-item">
+          <a class="nav-link" href="/spotify">Search <span class="sr-only">(current)</span></a>
         </li>
         <li class="nav-item">
           <a class="nav-link" href="/playlist_extender">Playlists</a>
         </li>
-                <li class="nav-item">
+        <li class="nav-item active">
           <a class="nav-link" href="/my_playlists">My Playlists</a>
         </li>
       </ul>
@@ -38,42 +32,39 @@
   </nav>
 
   <div class="container">
-    <div class="row">
-      <div class="col-lg-12 text-center jumbotron mt-4"><h1>Search for an Artist</h1></div>
-    </div>
-    <p>Search for an artist and click on any of the results to automatically create a playlist based on the artist. The playlist is made by taking the top 5 related artists and compiling each of their top 10 tracks. The playlist will appear in your Spotify account as a private playlist.</p>
-    <br>
-    <p>You can view your created playlists (the ones made with this app) in the My Playlists tab.</p>
-        <div class="mb-5">
-    <form id="search-form" class="form-inline">
-      <input type="text" id="query" value="" class="form-control mr-3" placeholder="Type an Artist Name"/>
-      <input type="submit" id="search" class="btn btn-primary" value="Search" />
-    </form>
-    </div>
-    <table id="search-artists" class="table table-bordered table-hover">
+    <div class="jumbotron text-center mt-4"><h1>My Playlists</h1></div>
+    <p>Here are your most recent playlists made with this app!</p>
+    <% for (var i = 0; i < playlists.length; i++) { %>
+    <h2 class="show">Playlist <%= i + 1 %></h2>
+    <table class="table table-bordered table-hover">
       <thead>
         <tr>
+          <th>Track</th>
           <th>Artist</th>
-          <th>Followers</th>
-          <th>Popularity</th>
-          <th>Genres</th>
+          <th>Preview</th>
         </tr>
       </thead>
       <tbody>
+        <% for (var j = 0; j < playlists[i].length; j++) { %>
+        <tr>
+          <td><%= playlists[i][j].trackName %></td>
 
+          <td><%= playlists[i][j].artists %></td>
+          <td><a href=<%= playlists[i][j].preview_url %> >Preview</a></td>
+        </tr>
+        <% } %>
       </tbody>
     </table>
+    <% } %>
 
-    <div id="results"></div>
   </div>
+
   <script src="https://code.jquery.com/jquery-3.1.1.slim.min.js" integrity="sha384-A7FZj7v+d/sdmMqp/nOQwliLvUsJfDHW+k9Omg/a/EheAdgtzNs3hpfag6Ed950n" crossorigin="anonymous"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/tether/1.4.0/js/tether.min.js" integrity="sha384-DztdAPBWPRXSA/3eYEEUWrWCy7G5KFbe8fFjk5JAIxUYHKkDx6Qin1DkWx51bBrb" crossorigin="anonymous"></script>
   <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0-alpha.6/js/bootstrap.min.js" integrity="sha384-vBWWzlZJ8ea9aCX4pEW3rVHjgjt7zpkNpZk+02D9phzyeVkE+jo0ieGizqPLForn" crossorigin="anonymous"></script>
 
   <script src="/js/jquery.min.js"></script>
   <!-- <script src="/js/bootstrap.min.js"></script> -->
-  <script src="js/loggedin.js"></script>
-
 
 
 </body>

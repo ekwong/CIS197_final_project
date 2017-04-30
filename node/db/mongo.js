@@ -1,5 +1,5 @@
 var mongoose = require('mongoose');
-mongoose.connect('mongodb://localhost/cis197hw6', function (err) {
+mongoose.connect('mongodb://localhost/cis197final', function (err) {
   if (err && err.message.includes('ECONNREFUSED')) {
     console.log('Error connecting to mongodb database: %s.\nIs "mongod" running?', err.message);
     process.exit(0);
@@ -12,23 +12,14 @@ mongoose.connect('mongodb://localhost/cis197hw6', function (err) {
 
 var db = mongoose.connection;
 
-var keySchema = new mongoose.Schema({
-  key: String
+var playlistSchema = new mongoose.Schema({
+  spotifyID: String,
+  playlists: [String]
 });
 
-var reviewSchema = new mongoose.Schema({
-  className: String,
-  semester: String,
-  rating: Number,
-  text: String
-});
-
-var Key = mongoose.model('Key', keySchema);
-var Reviews = mongoose.model('Reviews', reviewSchema);
+var Playlist = mongoose.model('Playlist', playlistSchema);
 
 module.exports = {
-  Key: Key,
-  Reviews: Reviews,
-  mongoose: mongoose,
-  db: db.collection('Reviews')
+  Playlist: Playlist,
+  mongoose: mongoose
 };

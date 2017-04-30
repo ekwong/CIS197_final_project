@@ -4,6 +4,8 @@ var uuid = require('node-uuid');
 var spotify = require('./spotify');
 var authorizeURL = spotify.authorizeURL;
 var spotifyApi = spotify.spotifyApi;
+var Q = require('q');
+var playlist = require('./db/playlist');
 
 app.use('/js', express.static(__dirname + '/node_modules/bootstrap/dist/js')); // redirect bootstrap JS
 app.use('/js', express.static(__dirname + '/node_modules/jquery/dist')); // redirect JS jQuery
@@ -19,30 +21,63 @@ app.use(express.static(__dirname + '/public'));
 var bodyParser = require('body-parser');
 app.use(bodyParser.urlencoded({extended: false}));
 
-app.get('/', login);
+app.get('/', function (req, res) {
+  var authorizeURL = spotify.authorizeURL;
+  res.redirect(authorizeURL);
+});
 
 app.get('/callback', callback);
 
 var user = '';
 app.get('/spotify', function (req, res) {
-  spotify.getMe(function (err, result) {
-    // console.log("results: " + result);
-    user = result.id;
-    spotify.getUserPlaylists(user, function (err, result1) {
-      // console.log('user playlists are : ' + JSON.stringify(result1));
-      spotify.getPlaylist(user, result1[0].id, function (err, tracks) {
-        console.log("TRACKS: " + JSON.stringify(tracks));
-        res.render('loggedin.ejs', {user: user, playlists: result1, tracks: tracks});
+  spotifyApi.getMe().then(function (data) {
+    user = data.body.id;
+    playlist.containsUser(user, function (err, data) {
+      if (!data) {
+        playlist.createUser(user);
+      }
+    });
+    res.render('loggedin.ejs');
+  });
+});
+
+app.post('/create_artist_playlist', function (req, res) {
+  var artistID = req.body.artistID;
+  var artistName = req.body.artistName;
+  spotify.createPlaylistFromArtist(user, artistID, 'Playlist Based on ' + artistName)
+  .then (function (data) {
+    res.send();
+  });
+});
+
+app.get('/my_playlists', function (req, res) {
+  playlist.getPlaylists(user, function (err, data) {
+    if (data == null) {console.log('no playlists for user'); res.render('my_playlists.ejs', {playlists: []}); return;}
+    var playlists = data.playlists;
+    var promises = playlists.map(function (playlist) {
+      return spotifyApi.getPlaylistTracks(user, playlist)
+      .then(function(data) {
+        return data;
+      }, function(err) {
+        console.log('Something went wrong in playlist track', err);
       });
     });
+    return Q.all(promises).then (function (results) {
+      // console.log("as;dlkfjas;dklfjas;dlfkja;s" + JSON.stringify(results));
+      var arr = Array.prototype.concat.apply([], results);
+      // console.log('arr is: ' + JSON.stringify(arr));
+      // console.log('length is: ' + JSON.stringify(arr[3]));
+      console.log("IN MY PLAYLISTS");
+      var rev = [];
+      arr.forEach(function (playlist) {
+        console.log("playlist: " + JSON.stringify(playlist));
+        var cur = spotify.processPlaylist(playlist.body.items);
+        rev.push(cur);
+      });
+      res.render('my_playlists.ejs', {playlists: rev});
+      return;
+    });
   });
-  // spotify.getNewReleases(function (err, results) {
-  //   console.log("result of new releases: " + results);
-  // });
-  // spotify.searchArtists('Rihanna', function (err, results) {
-  //   console.log('result of call to searchArtists is: ' + JSON.stringify(results));
-  //   res.render('loggedin');
-  // });
 });
 
 app.post('/search', function (req, res) {
@@ -64,7 +99,6 @@ app.post('/create_playlist', function (req, res) {
 app.post('/search_top_tracks', function (req, res) {
   var search = req.body.searchTerm;
   spotify.getArtistTopTracks(search, function (err, results) {
-    console.log('TOP TRACKS ARE: ' + JSON.stringify(results));
     res.send(results);
   });
 });
@@ -73,28 +107,48 @@ app.post('/create_recommended_playlist', function (req, res) {
   var user = req.body.user;
   var playlistName = req.body.playlistName;
   var basedOnPlaylist = req.body.basedOnPlaylist;
+  console.log('begin');
   spotify.createPlaylist(user, playlistName, function (err, results) {
     spotify.getUserPlaylist(user, basedOnPlaylist, function (err, tracks) {
       tracks.forEach(function (track) {
         var artistsSeen = {};
-        track.atrists.forEach(function (artist) {
+        var toAdd = [];
+        console.log("HERE");
+        track.artists.forEach(function (artist) {
           if (!artistsSeen.hasOwnProperty(artist)) {
             artistsSeen[artist] = true;
-            var toAdd = [];
+            
             spotify.getArtistTopTracks(artist.id, function (err, topTracks) {
               for (var i = 0; i < 3; i++) {
                 toAdd.push(topTracks[i].uri);
               }
-              spotifyApi.addTracksToPlaylist(user, playlistName, topTracks);
+              spotifyApi.addTracksToPlaylist(user, playlistName, topTracks)
+              .then(function (data) {
+                res.send({playlistname: playlistName});
+              });
             });
           }
         });
       });
     });
-    res.send(results);
+    // res.send(results);
   });
 
-})
+});
+app.get('/playlist_extender', function (req, res) {
+    spotify.getMe(function (err, result) {
+    console.log("results: " + JSON.stringify(result));
+    var user = result.id;
+    spotify.getUserPlaylists(user, function (err, result1) {
+      // console.log('user playlists are : ' + JSON.stringify(result1));
+      spotify.getPlaylist(user, result1[0].id, function (err, tracks) {
+        // console.log("TRACKS: " + JSON.stringify(tracks));
+        console.log("USER PLAYLISTS: " + JSON.stringify(result1));
+        res.render('playlist_extender.ejs', {user: user, playlists: result1, tracks: tracks});
+      });
+    });
+  });
+});
 
 // Generate a random cookie secret for this app
 var generateCookieSecret = function () {
@@ -110,25 +164,6 @@ app.use(cookieSession({
   name: 'session',
   secret: randCookie
 }));
-
-
-// Mount your routers. Please use good style here: mount a single router per use() call,
-// preceded only by necessary middleware functions.
-// DO NOT mount an 'authenticating' middleware function in a separate call to use().
-// For instance, the API routes require a valid key, so mount checkValidKey and apiRouter in the same call.
-// var keysRouter = require('./routes/keys');
-// app.use('/', keysRouter);
-
-// var loginRouter = require('./routes/login');
-// app.use('/', loginRouter);
-
-// var isAuthenticated = require('./middlewares/isAuthenticated');
-// var reviewsRouter = require('./routes/reviews');
-// app.use('/reviews', isAuthenticated, reviewsRouter);
-
-// var checkValidKey = require('./middlewares/checkValidKey');
-// var apiRouter = require('./routes/api');
-// app.use('/api', checkValidKey, apiRouter);
 
 var handleError = require('./middlewares/handleError');
 app.use(handleError);

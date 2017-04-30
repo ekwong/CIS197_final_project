@@ -20,6 +20,7 @@
     "lodash": "^4.6.1",
     "mongoose": "^4.1.11",
     "node-uuid": "^1.4.3",
+    "q": "^1.5.0",
     "seeder": "^0.2.1",
     "spotify-web-api-node": "^2.3.6"
   },
